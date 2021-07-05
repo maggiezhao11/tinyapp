@@ -7,10 +7,16 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+//register a handler on the root path,"/"
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
+});
+
+//adding routes
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
 });
