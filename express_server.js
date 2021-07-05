@@ -35,6 +35,8 @@ app.get("/urls", (req, res) => {
 });
 //adding a route for /urls
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: { urls: urlDatabase } };
+  const templateVars = { shortURL: req.params.shortURL,longURL: urlDatabase[req.params.shortURL]};
+  // console.log("urlDatabase:", urlDatabase);
+  // console.log("longURL:", urlDatabase[req.params.shortURL]);
   res.render("urls_show", templateVars);
 });
