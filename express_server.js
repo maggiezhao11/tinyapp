@@ -8,7 +8,7 @@ const cookieParser = require('cookie-parser');
 
 app.set("view engine", "ejs");//set ejs as the view engine
 app.use(bodyParser.urlencoded({extended: true})); //add middleware in order to review body of POST when its sent as a Buffer
-
+app.use(cookieParser());
 function generateRandomString() {
   let result = '';
   let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -45,7 +45,8 @@ app.get("/hello", (req, res) => {
 
 //adding a route for /urls
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  console.log(req.cookies["username"]);
+  const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
   res.render("urls_index", templateVars);
 });
 
@@ -56,7 +57,7 @@ app.get("/urls/new", (req, res) => {
 
 //adding a route for /urls
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL],username: req.cookies["username"]};
   // console.log("urlDatabase:", urlDatabase);
   //console.log("longURL:", urlDatabase[req.params.shortURL]);
   res.render("urls_show", templateVars);
