@@ -45,13 +45,11 @@ app.get("/hello", (req, res) => {
 //adding a route for /urls
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
-  res.status(200);
   res.render("urls_index", templateVars);
 });
 
 //adding a NEW route to show the form
 app.get("/urls/new", (req, res) => {
-  res.status(200);
   res.render("urls_new");
 });
 
@@ -60,7 +58,6 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL,longURL: urlDatabase[req.params.shortURL]};
   // console.log("urlDatabase:", urlDatabase);
   // console.log("longURL:", urlDatabase[req.params.shortURL]);
-  res.status(200);
   res.render("urls_show", templateVars);
 });
 
@@ -74,12 +71,18 @@ app.post("/urls", (req, res) => {
   //res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
 
-app.get("/u/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL,longURL: urlDatabase[req.params.shortURL]};
-  //const shortUrl = req.params.shortURL;
-  //res.redirect(`/urls/${shortUrl}`);
-  res.status(300);
-  res.render("urls_show", templateVars)
+// add a post route to remove a URL (DELETE)
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const urlToBeDeleted = req.params.shortURL;
+  delete urlDatabase[urlToBeDeleted];
+  res.redirect('/urls');
 });
 
-//YcrAJI
+// app.get("/u/:shortURL", (req, res) => {
+//   const templateVars = { shortURL: req.params.shortURL,longURL: urlDatabase[req.params.shortURL]};
+//   //const shortUrl = req.params.shortURL;
+//   //res.redirect(`/urls/${shortUrl}`);
+//   res.status(300);
+//   res.render("urls_show", templateVars)
+// });
+
