@@ -98,4 +98,9 @@ app.post("/login", (req, res) => {
   res.redirect('/urls');
 });
 
+// add a route to handle logout (implement logout client and server logic)
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect('/urls');
+});
 
