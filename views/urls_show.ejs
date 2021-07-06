@@ -12,8 +12,12 @@
       <div class="card-header"></div>
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
-        <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
+        <p class="card-text">Short URL: <a href="/urls/<%= shortURL %>"><%= shortURL %></a></p>
       </div>
+    <form method="POST" action="/urls/<%= shortURL %>"> 
+      <input type="text" name="id" placeholder="type your new longURL"> 
+      <button type="submit">Edit</button>
+    </form>
     <div class="card-footer text-muted"></div>
   </div>
   <!-- Bootstrap JS -->

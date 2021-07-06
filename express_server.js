@@ -55,9 +55,9 @@ app.get("/urls/new", (req, res) => {
 
 //adding a route for /urls
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL,longURL: urlDatabase[req.params.shortURL]};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   // console.log("urlDatabase:", urlDatabase);
-  // console.log("longURL:", urlDatabase[req.params.shortURL]);
+  //console.log("longURL:", urlDatabase[req.params.shortURL]);
   res.render("urls_show", templateVars);
 });
 
@@ -78,11 +78,15 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect('/urls');
 });
 
-// app.get("/u/:shortURL", (req, res) => {
-//   const templateVars = { shortURL: req.params.shortURL,longURL: urlDatabase[req.params.shortURL]};
-//   //const shortUrl = req.params.shortURL;
-//   //res.redirect(`/urls/${shortUrl}`);
-//   res.status(300);
-//   res.render("urls_show", templateVars)
-// });
 
+// add a post route to edit a URL (EDIT)
+
+
+app.post("/urls/:id", (req, res) => {
+  const newLongURL = req.body.id;
+  urlDatabase[req.params.id] = newLongURL;
+  res.redirect('/urls');
+
+  //const templateVars = { shortURL: req.params.shortURL,longURL: newLongURL };
+  //res.render('urls_show', templateVars);
+});
