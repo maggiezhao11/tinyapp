@@ -108,6 +108,13 @@ app.post("/urls/:id", (req, res) => {
   //res.render('urls_show', templateVars);
 });
 
+// add a route to handle new login page
+app.get("/login", (req, res) => {
+  const templateVars = { email: req.body.email, password: req.body.password, user: users[req.cookies["user_id"]]};
+  res.render('urls_login', templateVars);
+});
+
+
 // add a route to handle login (set a cookie as an username)
 app.post("/login", (req, res) => {
   //console.log("/login", req);
@@ -124,7 +131,7 @@ app.post("/logout", (req, res) => {
 
 // add user registration form route handler
 app.get("/register", (req, res) => {
-  const templateVars = { name: req.body.name, email: req.body.email, user: users[req.cookies["user_id"]]};
+  const templateVars = { email: req.body.name, password: req.body.email, user: users[req.cookies["user_id"]]};
   res.render("urls_register", templateVars);
 });
 
