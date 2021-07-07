@@ -3,11 +3,13 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
-//const checkEmailExist = require('./helpers.js');
+const {checkEmailExist} = require('./helpers');
 
 app.set("view engine", "ejs");//set ejs as the view engine
 app.use(bodyParser.urlencoded({extended: true})); //add middleware in order to review body of POST when its sent as a Buffer
 app.use(cookieParser()); //add middleware in order to get cookie information in a proper way
+
+
 
 
 //function to create a random 6 characters shortURL
@@ -63,7 +65,6 @@ app.get("/hello", (req, res) => {
 
 //adding a route for /urls
 app.get("/urls", (req, res) => {
-  //console.log(req.cookies["username"]);
   const templateVars = { urls: urlDatabase, user: users[req.cookies["user_id"]]};
   res.render("urls_index", templateVars);
 });
@@ -75,7 +76,7 @@ app.get("/urls/new", (req, res) => {
 
 //adding a route for /urls
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL],user: users[req.cookies["user_id"]]};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies["user_id"]]};
   // console.log("urlDatabase:", urlDatabase);
   //console.log("longURL:", urlDatabase[req.params.shortURL]);
   res.render("urls_show", templateVars);
@@ -115,13 +116,36 @@ app.get("/login", (req, res) => {
 });
 
 
-// add a route to handle login (set a cookie as an username)
+// add a route to handle login (set a cookie as an userID)
 app.post("/login", (req, res) => {
   //console.log("/login", req);
   //console.log("/login", req.params);
-  res.cookie('user_id', req.body.user_id);
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = checkEmailExist(email, users);
+  if (!user) {
+    res.status(403).send("userID not found");
+  } else if (password !== user.password) {
+    res.status(403).send("password is wrong");
+  } else {
+  res.cookie('user_id', user.id);
   res.redirect('/urls');
+  }
 });
+
+
+//function check out userEmail is included in the db
+// const checkEmailExist = function (value, usersDB) {
+//   const keys = Object.keys(usersDB);
+//   for (let key of keys) {
+//     const user = usersDB[key];
+//     if (user['email'] === value) {
+//       return user;
+//     }
+//   } return false;
+// };
+
+
 
 // add a route to handle logout (implement logout client and server logic)
 app.post("/logout", (req, res) => {
@@ -146,21 +170,13 @@ app.post("/register", (req, res) => {
   // console.log("keys:", Object.keys(users)); 
   if (email.length === 0 || password.length === 0) {
     res.status(400).send("email or password is empty");
-  }
-  const checkEmailExist = function (value, usersDB) {
-    const keys = Object.keys(usersDB);
-    for (let key of keys) {
-      if (usersDB[key]['email'] === value) {
-        return true;
-      }
-    } return false;
-  };
-  if (checkEmailExist(email, users)) {
-    res.status(400).send("username exists");
-  }
+  } else if (checkEmailExist(email, users)) {
+    res.status(400).send("userID exists");
+  } else {
   users[id] = user;
   res.cookie("user_id", id);
   res.redirect('/urls');
+  }
 });
 
 

@@ -1,10 +1,12 @@
 const checkEmailExist = function (value, usersDB) {
   const keys = Object.keys(usersDB);
   for (let key of keys) {
-    if (usersDB[key]['email'] === value) {
-      return true;
+    const user = usersDB[key];
+    if (user['email'] === value) {
+      return user;
     }
   } return false;
 };
+
 
 module.exports = { checkEmailExist };
