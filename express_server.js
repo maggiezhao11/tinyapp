@@ -3,8 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
-
-
+//const checkEmailExist = require('./helpers.js');
 
 app.set("view engine", "ejs");//set ejs as the view engine
 app.use(bodyParser.urlencoded({extended: true})); //add middleware in order to review body of POST when its sent as a Buffer
@@ -26,6 +25,22 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+
+// create an newGlobalDB for users
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+};
+
 
 //register a handler on the root path,"/"
 app.get("/", (req, res) => {
@@ -49,7 +64,7 @@ app.get("/hello", (req, res) => {
 //adding a route for /urls
 app.get("/urls", (req, res) => {
   //console.log(req.cookies["username"]);
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
+  const templateVars = { urls: urlDatabase, user: users[req.cookies["user_id"]]};
   res.render("urls_index", templateVars);
 });
 
@@ -60,7 +75,7 @@ app.get("/urls/new", (req, res) => {
 
 //adding a route for /urls
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL],username: req.cookies["username"]};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL],user: users[req.cookies["user_id"]]};
   // console.log("urlDatabase:", urlDatabase);
   //console.log("longURL:", urlDatabase[req.params.shortURL]);
   res.render("urls_show", templateVars);
@@ -97,18 +112,50 @@ app.post("/urls/:id", (req, res) => {
 app.post("/login", (req, res) => {
   //console.log("/login", req);
   //console.log("/login", req.params);
-  res.cookie('username', req.body.username);
+  res.cookie('user_id', req.body.user_id);
   res.redirect('/urls');
 });
 
 // add a route to handle logout (implement logout client and server logic)
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect('/urls');
 });
 
-// add user registration route handler
+// add user registration form route handler
 app.get("/register", (req, res) => {
-  const templateVars = { name: req.body.name, email: req.body.email, username: req.cookies["username"]};
-  res.render("urls_register", templateVars)
+  const templateVars = { name: req.body.name, email: req.body.email, user: users[req.cookies["user_id"]]};
+  res.render("urls_register", templateVars);
 });
+
+
+// create an endpoint to handle the registration form data
+app.post("/register", (req, res) => {
+  const id = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = {id, email, password};
+  // console.log(users); 
+  // console.log("keys:", Object.keys(users)); 
+  if (email.length === 0 || password.length === 0) {
+    res.status(400).send("email or password is empty");
+  }
+  const checkEmailExist = function (value, usersDB) {
+    const keys = Object.keys(usersDB);
+    for (let key of keys) {
+      if (usersDB[key]['email'] === value) {
+        return true;
+      }
+    } return false;
+  };
+  if (checkEmailExist(email, users)) {
+    res.status(400).send("username exists");
+  }
+  users[id] = user;
+  res.cookie("user_id", id);
+  res.redirect('/urls');
+});
+
+
+
+
