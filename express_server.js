@@ -8,7 +8,10 @@ const cookieParser = require('cookie-parser');
 
 app.set("view engine", "ejs");//set ejs as the view engine
 app.use(bodyParser.urlencoded({extended: true})); //add middleware in order to review body of POST when its sent as a Buffer
-app.use(cookieParser());
+app.use(cookieParser()); //add middleware in order to get cookie information in a proper way
+
+
+//function to create a random 6 characters shortURL
 function generateRandomString() {
   let result = '';
   let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -45,7 +48,7 @@ app.get("/hello", (req, res) => {
 
 //adding a route for /urls
 app.get("/urls", (req, res) => {
-  console.log(req.cookies["username"]);
+  //console.log(req.cookies["username"]);
   const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
   res.render("urls_index", templateVars);
 });
@@ -70,7 +73,7 @@ app.post("/urls", (req, res) => {
   console.log(urlDatabase);
   res.status(300);
   res.redirect(`/urls/${shortUrl}`);
-  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  //res.send("Ok");         // Respond with 'Ok' 
 });
 
 // add a post route to remove a URL (DELETE)
@@ -104,3 +107,8 @@ app.post("/logout", (req, res) => {
   res.redirect('/urls');
 });
 
+// add user registration route handler
+app.get("/register", (req, res) => {
+  const templateVars = { name: req.body.name, email: req.body.email, username: req.cookies["username"]};
+  res.render("urls_register", templateVars)
+});
