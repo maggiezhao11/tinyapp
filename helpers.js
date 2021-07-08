@@ -1,8 +1,8 @@
-const checkEmailExist = function (value, usersDB) {
+const checkEmailExist = function (email, usersDB) {
   const keys = Object.keys(usersDB);
   for (let key of keys) {
     const user = usersDB[key];
-    if (user['email'] === value) {
+    if (user['email'] === email) {
       return user;
     }
   } return false;
