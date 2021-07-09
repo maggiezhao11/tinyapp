@@ -11,8 +11,8 @@ const checkEmailExist = function(email, usersDB) {
 };
 
 //function to check user login status
-const checkUserLogin = function(req) {
-  if (req.session.user_id) {
+const checkUserLogin = function(req, users) {
+  if (users[req.session.user_id]) {
     return true;
   }
   return false;

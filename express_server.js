@@ -47,7 +47,7 @@ const users = {
 
 //register a handler on the root path,"/"
 app.get("/", (req, res) => {
-  if (checkUserLogin(req)) {
+  if (checkUserLogin(req, users)) {
     res.redirect("/urls");
   } else {
     res.redirect("/login");
@@ -69,7 +69,7 @@ app.get("/hello", (req, res) => {
 });
 
 //create a function to filter users
-const urlsForUser = function(id) {
+const urlsForUser = function (id) {
   const urlList = [];
   for (let item in urlDatabase) {
     if (urlDatabase[item].userID === id) {
@@ -83,20 +83,18 @@ const urlsForUser = function(id) {
 app.get("/urls", (req, res) => {
   let currentUserURLs = urlsForUser(req.session.user_id);
   let user = users[req.session.user_id];
-  console.log("currentUserURLs:", currentUserURLs);
   const templateVars = {
     urls: currentUserURLs,
     user: users[req.session.user_id],
     errorMessage: "you don't have any URLs created",
   };
-  console.log(user);
-  if (user && currentUserURLs.length > 0) {
+  if (user && currentUserURLs.length > 0) { //user owns urls
     res.render("urls_index", templateVars);
-  } else if (user && currentUserURLs.length === 0) {
-    //res.send("you don't have any URLs created")
-    res.render("error", templateVars);
+  } else if (user && currentUserURLs.length === 0) { //user doesn't own urls
+    res.status(200);
+    res.render("error_no_urls", templateVars);
   } else {
-    //res.send("pls login or register first");
+    res.status(403);
     res.render("error_no_login");
   }
 });
@@ -111,31 +109,38 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
-//adding a route for /urls
+//adding a route for reading /urls
 app.get("/urls/:shortURL", (req, res) => {
+  if (urlDatabase[req.params.shortURL] === undefined) {
+    res.status(404);
+    return res.render("error", { errorMessage: "page is not found" }); // if the shortURL doesn't exist in the DB
+  }
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.session.user_id],
   };
   let userID = urlDatabase[req.params.shortURL].userID;
-  if (checkUserLogin(req) && req.session.user_id === userID) {
+  if (checkUserLogin(req, users) && req.session.user_id === userID) {  //user logged in and owns urls
     res.render("urls_show", templateVars);
-  } else if (!checkUserLogin(req)) {
-    res.render("error", { errorMessage: "you are not logged in" });
+  } else if (!checkUserLogin(req, users)) {
+    res.status(403);
+    res.render("error", { errorMessage: "you are not logged in" }); // user haven't login
   } else if (templateVars.longURL.length === 0) {
-    res.render("error", { errorMessage: "page is not found" });
+    res.status(404);
+    res.render("error", { errorMessage: "page is not found" }); //url doesn't exist
   } else {
+    res.status(403);
     res.render("error", {
-      errorMessage: "you doesn't own the url with logged in ID",
-    });
+      errorMessage: "you doesn't own the url with logged in ID"});//user logged in and doesn't own urls
   }
 });
 
+// add new route to send form to urls
 app.post("/urls", (req, res) => {
   const shortUrl = generateRandomString();
   let userID = req.session.user_id;
-  if (checkUserLogin(req)) {
+  if (checkUserLogin(req, users)) {
     urlDatabase[shortUrl] = { userID: userID, longURL: req.body.longURL };
     res.status(300);
     res.redirect(`/urls/${shortUrl}`);
@@ -150,6 +155,7 @@ app.get("/u/:shortURL", (req, res) => {
     const longURL = urlDatabase[req.params.shortURL].longURL;
     res.redirect(longURL);
   } else {
+    res.status(404);
     res.render("error", { errorMessage: "page is not found" });
   }
 });
@@ -161,27 +167,29 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     const urlToBeDeleted = req.params.shortURL;
     delete urlDatabase[urlToBeDeleted];
     res.redirect("/urls");
-  } else if (!checkUserLogin(req)) {
+  } else if (!checkUserLogin(req, users)) {
+    res.status(403);
     res.render("error", { errorMessage: "you are not logged in" });
   } else {
+    res.status(403);
     res.render("error", {
-      errorMessage: "you doesn't own the url with logged in ID",
-    });
+      errorMessage: "you doesn't own the url with logged in ID" });
   }
 });
 
 // add a post route to edit a URL (EDIT)
 app.post("/urls/:id", (req, res) => {
   let userID = urlDatabase[req.params.id].userID;
-  if (checkUserLogin(req) && req.session.user_id === userID) {
+  if (checkUserLogin(req, users) && req.session.user_id === userID) {
     urlDatabase[req.params.id] = { longURL: req.body.longURL, userID: userID };
     res.redirect("/urls");
-  } else if (!checkUserLogin(req)) {
+  } else if (!checkUserLogin(req, users)) {
+    res.status(403);
     res.render("error", { errorMessage: "you are not logged in" });
   } else {
+    res.status(403);
     res.render("error", {
-      errorMessage: "you doest own the url with logged in ID",
-    });
+      errorMessage: "you doest own the url with logged in ID"});
   }
 });
 
@@ -192,7 +200,7 @@ app.get("/login", (req, res) => {
     password: req.body.password,
     user: users[req.session.user_id],
   };
-  if (req.session.user_id) {
+  if (users[req.session.user_id]) {
     res.redirect("/urls");
   } else {
     res.render("urls_login", templateVars);
@@ -205,10 +213,12 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
   const user = checkEmailExist(email, users);
   if (!user) {
+    res.status(404);
     res.render("error", { errorMessage: "userID not found" });
   }
   const passwordMatch = bcrypt.compareSync(password, user.password);
   if (!passwordMatch) {
+    res.status(403);
     res.render("error", { errorMessage: "password is wrong" });
   } else {
     req.session.user_id = user.id;
@@ -218,8 +228,7 @@ app.post("/login", (req, res) => {
 
 // add a route to handle logout (implement logout client and server logic)
 app.post("/logout", (req, res) => {
-  console.log("req.session.user_id:", req.session.user_id);
-  req.session = null;
+  req.session = null; // clear cookie session, set it null or clear cookie.
   res.redirect("/urls");
 });
 
@@ -230,7 +239,7 @@ app.get("/register", (req, res) => {
     password: req.body.email,
     user: users[req.session.user_id],
   };
-  if (checkUserLogin(req)) {
+  if (checkUserLogin(req, users)) {
     res.redirect("/urls");
   } else {
     res.render("urls_register", templateVars);
@@ -245,8 +254,10 @@ app.post("/register", (req, res) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
   const user = { id, email, password: hashedPassword };
   if (email.length === 0 || password.length === 0) {
+    res.status(403);
     res.render("error", { errorMessage: "email or password is empty" });
   } else if (checkEmailExist(email, users)) {
+    res.status(403);
     res.render("error", { errorMessage: "userID already exists" });
   } else {
     users[id] = user;
