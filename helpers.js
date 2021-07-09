@@ -8,5 +8,11 @@ const checkEmailExist = function (email, usersDB) {
   } return false;
 };
 
+const checkUserLogin = function (req) {
+  if (req.session.user_id) {
+    return true;
+  } return false;
+};
 
-module.exports = { checkEmailExist };
+
+module.exports = { checkEmailExist, checkUserLogin };
